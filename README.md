@@ -34,28 +34,30 @@
    git clone https://github.com/karpovIlya/nestjs-test-task
    cd nestjs-test-task
    ```
-2. **Создайте файл `.development.env` в корне проекта с содержимым:**
+2. **Создайте файл `.env` в корне проекта с содержимым:**
 
    ```
    PORT=3000
 
-   POSTGRES_HOST=database
-   POSTGRES_PORT=5432
+   POSTGRES_HOST=0.0.0.0
+   POSTGRES_PORT=5434
    POSTGRES_USER=postgres
    POSTGRES_PASSWORD=1477
    POSTGRES_DB=test-task
 
    JWT_ACCESS_SECRET=ACCESS_SECRET
    JWT_REFRESH_SECRET=REFRESH_SECRET
+
    ```
 3. **Запустите проект с помощью Docker Compose:**
 
    ```bash
    docker-compose up --build
+   npm run start:dev
    ```
 4. **API будет доступно на порту `3000`:**
 
    Теперь вы можете обращаться к API через [http://localhost:3000]()
 5. **Swagger документация:**
 
-   Swagger доступен по следующему адресу:
+   Swagger доступен по следующему адресу: [http://localhost:3000/api]()

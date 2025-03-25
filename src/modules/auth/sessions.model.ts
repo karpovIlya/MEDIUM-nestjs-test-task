@@ -13,11 +13,7 @@ interface ISessionCreationAttrs {
   userId: number
 }
 
-@Table({
-  tableName: 'sessions',
-  createdAt: false,
-  updatedAt: false,
-})
+@Table({ tableName: 'sessions' })
 export class Session extends Model<Session, ISessionCreationAttrs> {
   @Column({
     type: DataType.INTEGER,

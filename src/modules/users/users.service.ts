@@ -1,122 +1,89 @@
-import {
-  Injectable,
-  ConflictException,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
-import { Response } from 'express'
+import { Injectable, ConflictException } from '@nestjs/common'
 import * as bcrypt from 'bcryptjs'
-import { User } from './users.model'
+
+import { UsersRepository } from './users.repository'
+import { SessionRepository } from '../auth/sessions.repository'
+import { UsersFiltersQueryDto } from './dto/users-filters-query.dto'
 import { CreateUserDto } from './dto/create-user.dto'
-import { CatchError } from 'src/common/decorators/catch-errors.decorator'
-import { IRequestWithUser } from '../auth/guards/jwt-auth.guard'
-import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto'
-import { makePaginationObject } from 'src/common/helpers/make-pagination-oject'
+import { GetUserResDto } from './dto/get-user-res.dto'
+
+import { ERROR_MESSAGES } from 'src/common/consts/error-messages.const'
+import { Pagination } from 'src/common/helpers/pagination/pagination.helper'
+import { IJwtPayload } from '../auth/jwt-tokens.service'
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User) private userRepository: typeof User) {}
+  constructor(
+    private readonly userRepository: UsersRepository,
+    private readonly sessionRepository: SessionRepository,
+  ) {}
 
-  @CatchError
-  async getAllUsers(paginationQuery: PaginationQueryDto, res: Response) {
-    const { limit, page } = paginationQuery
-    const paginatedUsers = await this.userRepository.findAndCountAll({
-      attributes: { exclude: ['password'] },
-      offset: (page - 1) * limit,
-      limit,
-    })
-    const paginationData = makePaginationObject(
+  async getAllUsers(
+    limit: number,
+    page: number,
+    filters: UsersFiltersQueryDto,
+  ) {
+    const usersCount = await this.userRepository.getUserCount()
+    const usersPagination = new Pagination({
+      totalCount: usersCount,
       limit,
       page,
-      paginatedUsers.count,
+    })
+
+    const paginatedUsers = await this.userRepository.getPaginatedUsers(
+      usersPagination.limit,
+      usersPagination.offset,
+      filters,
     )
-    console.log('ТИП LIMIT:', typeof limit)
-    return res.status(200).json({
-      success: true,
-      statusCode: 200,
-      result: {
-        users: paginatedUsers.rows,
-        pagination: paginationData,
-      },
-    })
-  }
 
-  @CatchError
-  async getUser(req: IRequestWithUser, res: Response) {
-    const userFromAccessToken = req.user
-    await this.getUserByEmail(userFromAccessToken.email)
-
-    if (!userFromAccessToken) {
-      throw new UnauthorizedException('Invalid or expired token')
+    return {
+      users: paginatedUsers.rows,
+      pagination: usersPagination.pageData,
     }
-
-    const { iat: _iat, exp: _exp, ...payload } = userFromAccessToken
-    void _iat
-    void _exp
-
-    return res.status(200).json({
-      success: true,
-      statusCode: 200,
-      result: {
-        user: payload,
-      },
-    })
   }
 
-  @CatchError
-  async deleteUser(req: IRequestWithUser, res: Response) {
-    const userFromAccessToken = req.user
-    await this.getUserByEmail(userFromAccessToken.email)
-
-    if (!userFromAccessToken) {
-      throw new UnauthorizedException('Invalid or expired token')
+  getUser(userJwtPayload: IJwtPayload): GetUserResDto {
+    return {
+      id: userJwtPayload.id,
+      login: userJwtPayload.login,
+      email: userJwtPayload.email,
+      age: userJwtPayload.age,
+      description: userJwtPayload.description,
+      createdAt: userJwtPayload.createdAt,
+      updatedAt: userJwtPayload.updatedAt,
     }
-
-    await this.userRepository.destroy({ where: { id: userFromAccessToken.id } })
-
-    const { iat: _iat, exp: _exp, ...payload } = userFromAccessToken
-    void _iat
-    void _exp
-
-    return res.status(200).json({
-      success: true,
-      statusCode: 200,
-      result: {
-        deletedUser: payload,
-      },
-    })
   }
 
-  @CatchError
-  async getUserByEmail(soughtEmail: string) {
-    const gettingUser = await this.userRepository.findOne({
-      where: { email: soughtEmail },
-    })
+  async deleteUser(userJwtPayload: IJwtPayload): Promise<GetUserResDto> {
+    await this.userRepository.destroyUser(userJwtPayload.id)
+    await this.sessionRepository.destroySession(userJwtPayload.id)
 
-    if (!gettingUser) {
-      throw new NotFoundException('There is no user with this email')
+    return {
+      id: userJwtPayload.id,
+      login: userJwtPayload.login,
+      email: userJwtPayload.email,
+      age: userJwtPayload.age,
+      description: userJwtPayload.description,
+      createdAt: userJwtPayload.createdAt,
+      updatedAt: userJwtPayload.updatedAt,
     }
-
-    return gettingUser
   }
 
-  @CatchError
   async createUser(userDto: CreateUserDto) {
-    const isUserAlreadyExist = !!(await this.userRepository.findOne({
-      where: { email: userDto.email },
-    }))
+    const isUserAlreadyExist = await this.userRepository.checkUserAlreadyExist(
+      userDto.email,
+    )
 
     if (isUserAlreadyExist) {
-      throw new ConflictException('This user already exists')
+      throw new ConflictException(ERROR_MESSAGES.USER_ALREADY_EXIST)
     }
 
     const hashedPassword = await bcrypt.hash(userDto.password, 10)
-    const userDtoWithHashPassword = {
+    const userDtoWithHashPassword: CreateUserDto = {
       ...userDto,
       password: hashedPassword,
     }
 
-    return await this.userRepository.create(userDtoWithHashPassword)
+    return await this.userRepository.addUser(userDtoWithHashPassword)
   }
 }
