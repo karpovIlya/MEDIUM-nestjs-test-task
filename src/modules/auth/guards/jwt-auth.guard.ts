@@ -4,9 +4,10 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common'
-import { Observable } from 'rxjs'
-import { AuthService, IJwtPayload } from '../auth.service'
 import { Request } from 'express'
+import { JwtTokensSevice, IJwtPayload } from '../jwt-tokens.service'
+import { UsersRepository } from 'src/modules/users/users.repository'
+import { ERROR_MESSAGES } from 'src/common/consts/error-messages.const'
 
 export interface IRequestWithUser extends Request {
   user: IJwtPayload
@@ -14,12 +15,13 @@ export interface IRequestWithUser extends Request {
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly jwtTokensSevice: JwtTokensSevice,
+    private readonly userRepository: UsersRepository,
+  ) {}
 
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
-    const req = context.switchToHttp().getRequest() as IRequestWithUser
+  async canActivate(context: ExecutionContext) {
+    const req = context.switchToHttp().getRequest<IRequestWithUser>()
     const authHeader =
       typeof req.headers?.authorization === 'string'
         ? req.headers.authorization
@@ -27,13 +29,20 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       const userFromAccessToken =
-        this.authService.getUserFromAccessToken(authHeader)
+        this.jwtTokensSevice.getUserFromAccessToken(authHeader)
+
+      await this.userRepository.getUserByEmail(userFromAccessToken.email)
+
+      if (!userFromAccessToken) {
+        throw new UnauthorizedException(ERROR_MESSAGES.INVALID_TOKEN)
+      }
+
       req.user = userFromAccessToken
 
       return true
     } catch (error) {
       void error
-      throw new UnauthorizedException('Invalid or expired token')
+      throw new UnauthorizedException(ERROR_MESSAGES.INVALID_TOKEN)
     }
   }
 }

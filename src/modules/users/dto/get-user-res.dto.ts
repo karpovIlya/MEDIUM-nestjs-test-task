@@ -1,16 +1,23 @@
 import {
-  IsString,
-  MinLength,
-  MaxLength,
-  IsInt,
-  IsPositive,
   IsEmail,
-  Min,
+  IsInt,
+  IsISO8601,
+  IsOptional,
+  IsPositive,
+  IsString,
   Max,
+  MaxLength,
+  Min,
+  MinLength,
 } from 'class-validator'
 import { ApiProperty } from '@nestjs/swagger'
 
-export class CreateUserDto {
+export class GetUserResDto {
+  @IsInt()
+  @IsPositive()
+  @ApiProperty({ description: 'The ID of a user', minimum: 1 })
+  id: number
+
   @IsString()
   @MinLength(4)
   @MaxLength(32)
@@ -21,7 +28,7 @@ export class CreateUserDto {
   @Min(18)
   @Max(100)
   @IsPositive()
-  @ApiProperty({ description: 'The age of a user', minimum: 18 })
+  @ApiProperty({ description: 'The age of a user', minimum: 1 })
   age: number
 
   @IsString()
@@ -35,9 +42,11 @@ export class CreateUserDto {
   @ApiProperty({ description: 'The email of a user' })
   email: string
 
-  @IsString()
-  @MinLength(8)
-  @MaxLength(64)
-  @ApiProperty({ description: 'The password of a user profile' })
-  password: string
+  @IsISO8601()
+  @IsOptional()
+  createdAt?: string
+
+  @IsISO8601()
+  @IsOptional()
+  updatedAt?: string
 }

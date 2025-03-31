@@ -9,11 +9,7 @@ interface IUserCreationAttrs {
   password: string
 }
 
-@Table({
-  tableName: 'users',
-  createdAt: false,
-  updatedAt: false,
-})
+@Table({ tableName: 'users', paranoid: true })
 export class User extends Model<User, IUserCreationAttrs> {
   @Column({
     type: DataType.INTEGER,
@@ -30,8 +26,12 @@ export class User extends Model<User, IUserCreationAttrs> {
   login: string
 
   @Column({
-    type: DataType.INTEGER,
+    type: DataType.SMALLINT,
     allowNull: false,
+    validate: {
+      min: 18,
+      max: 100,
+    },
   })
   age: number
 
@@ -54,6 +54,12 @@ export class User extends Model<User, IUserCreationAttrs> {
   })
   password: string
 
-  @HasOne(() => Session, { onDelete: 'cascade' })
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+  })
+  declare deletedAt: Date | null
+
+  @HasOne(() => Session)
   session: Session
 }

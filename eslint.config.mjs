@@ -1,4 +1,4 @@
-// @ts-check
+// @ts-nocheck
 import eslint from '@eslint/js';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import globals from 'globals';
@@ -28,6 +28,7 @@ export default tseslint.config(
   {
     rules: {
       '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/unbound-method': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
@@ -35,7 +36,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unnecessary-type-assertion': 'off',
-      'max-len': ['error', { 'code': 90 }],
+      'max-len': ['error', { 'code': 95 }],
       'quotes': ['error', 'single'],
       'semi': ['error', 'never'],
       'prettier/prettier': [

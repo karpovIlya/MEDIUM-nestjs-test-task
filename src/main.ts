@@ -2,13 +2,20 @@ import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 import * as cookieParser from 'cookie-parser'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
-import { HttpExceptionFilter } from './common/filters/http-exception.filter'
+import { AppExceptionFilter } from './common/filters/app-exception.filter'
+import { ValidationPipe } from '@nestjs/common'
 
 async function startServer() {
   const app = await NestFactory.create(AppModule)
 
   app.use(cookieParser())
-  app.useGlobalFilters(new HttpExceptionFilter())
+  app.useGlobalFilters(new AppExceptionFilter())
+  app.useGlobalPipes(
+    new ValidationPipe({
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  )
 
   const config = new DocumentBuilder()
     .setTitle('TEST-TASK API')
