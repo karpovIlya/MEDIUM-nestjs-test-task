@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common'
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common'
 import * as bcrypt from 'bcryptjs'
 
 import { UsersService } from '../users/users.service'
@@ -31,8 +35,8 @@ export class AuthService {
       id: createdUserJson.id,
       login: createdUserJson.login,
       age: createdUserJson.age,
-      description: createdUserJson.description,
       email: createdUserJson.email,
+      description: createdUserJson.description,
       createdAt: createdUserJson.createdAt,
       updatedAt: createdUserJson.updatedAt,
     }
@@ -107,17 +111,17 @@ export class AuthService {
       throw new UnauthorizedException(ERROR_MESSAGES.INVALID_TOKEN)
     }
 
+    const user = await this.userRepository.getUserByIdWithoutPassword(
+      userJwtPayload.id,
+    )
+
+    if (!user) {
+      throw new NotFoundException(ERROR_MESSAGES.NO_USER_WITH_THIS_ID)
+    }
+
     await this.sessionRepository.destroySession(userJwtPayload.id)
 
-    return {
-      id: userJwtPayload.id,
-      login: userJwtPayload.login,
-      age: userJwtPayload.age,
-      description: userJwtPayload.description,
-      email: userJwtPayload.email,
-      createdAt: userJwtPayload.createdAt,
-      updatedAt: userJwtPayload.updatedAt,
-    }
+    return user.toJSON() as GetUserResDto
   }
 
   async updateToken(refreshToken: string) {
@@ -140,8 +144,8 @@ export class AuthService {
       id: refreshTokenPayload.id,
       login: refreshTokenPayload.login,
       age: refreshTokenPayload.age,
-      description: refreshTokenPayload.description,
       email: refreshTokenPayload.email,
+      description: refreshTokenPayload.description,
       createdAt: refreshTokenPayload.createdAt,
       updatedAt: refreshTokenPayload.updatedAt,
     }

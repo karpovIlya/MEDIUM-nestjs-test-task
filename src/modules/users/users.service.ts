@@ -1,8 +1,13 @@
-import { Injectable, ConflictException } from '@nestjs/common'
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common'
 import * as bcrypt from 'bcryptjs'
 
 import { UsersRepository } from './users.repository'
 import { SessionRepository } from '../auth/sessions.repository'
+import { TransactionRepository } from '../balance/transaction.repository'
 import { UsersFiltersQueryDto } from './dto/users-filters-query.dto'
 import { CreateUserDto } from './dto/create-user.dto'
 import { GetUserResDto } from './dto/get-user-res.dto'
@@ -16,6 +21,7 @@ export class UsersService {
   constructor(
     private readonly userRepository: UsersRepository,
     private readonly sessionRepository: SessionRepository,
+    private readonly transactionRepository: TransactionRepository,
   ) {}
 
   async getAllUsers(
@@ -42,31 +48,34 @@ export class UsersService {
     }
   }
 
-  getUser(userJwtPayload: IJwtPayload): GetUserResDto {
-    return {
-      id: userJwtPayload.id,
-      login: userJwtPayload.login,
-      email: userJwtPayload.email,
-      age: userJwtPayload.age,
-      description: userJwtPayload.description,
-      createdAt: userJwtPayload.createdAt,
-      updatedAt: userJwtPayload.updatedAt,
+  async getUser(userJwtPayload: IJwtPayload): Promise<GetUserResDto> {
+    const user = await this.userRepository.getUserByIdWithoutPassword(
+      userJwtPayload.id,
+    )
+
+    if (!user) {
+      throw new NotFoundException(ERROR_MESSAGES.NO_USER_WITH_THIS_ID)
     }
+
+    return user.toJSON() as GetUserResDto
   }
 
   async deleteUser(userJwtPayload: IJwtPayload): Promise<GetUserResDto> {
+    const user = await this.userRepository.getUserByIdWithoutPassword(
+      userJwtPayload.id,
+    )
+
+    if (!user) {
+      throw new NotFoundException(ERROR_MESSAGES.NO_USER_WITH_THIS_ID)
+    }
+
     await this.userRepository.destroyUser(userJwtPayload.id)
     await this.sessionRepository.destroySession(userJwtPayload.id)
+    await this.transactionRepository.destroyAllUserTransactions(
+      userJwtPayload.id,
+    )
 
-    return {
-      id: userJwtPayload.id,
-      login: userJwtPayload.login,
-      email: userJwtPayload.email,
-      age: userJwtPayload.age,
-      description: userJwtPayload.description,
-      createdAt: userJwtPayload.createdAt,
-      updatedAt: userJwtPayload.updatedAt,
-    }
+    return user.toJSON() as GetUserResDto
   }
 
   async createUser(userDto: CreateUserDto) {

@@ -48,8 +48,8 @@ export class UsersController {
   })
   @ApiResponse(ERROR_RESPONSES.UNAUTHORIZED_EXCEPTION)
   @ApiResponse(ERROR_RESPONSES.INTERNAL_SERVER_ERROR_EXCEPTION)
-  getUser(@User() user: IJwtPayload): GetUserResDto {
-    return this.userService.getUser(user)
+  async getUser(@User() user: IJwtPayload): Promise<GetUserResDto> {
+    return await this.userService.getUser(user)
   }
 
   @Delete('/my')
