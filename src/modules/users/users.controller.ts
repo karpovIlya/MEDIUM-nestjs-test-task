@@ -1,4 +1,12 @@
-import { Controller, Get, Delete, UseGuards, Query } from '@nestjs/common'
+import {
+  Controller,
+  Get,
+  Delete,
+  UseGuards,
+  UseInterceptors,
+  Query,
+} from '@nestjs/common'
+import { CacheInterceptor } from '@nestjs/cache-manager'
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { UsersService } from './users.service'
@@ -19,6 +27,7 @@ export class UsersController {
 
   @Get()
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(CacheInterceptor)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Getting paginated users' })
   @ApiResponse({
@@ -39,6 +48,7 @@ export class UsersController {
 
   @Get('/my')
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(CacheInterceptor)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Getting your own user' })
   @ApiResponse({

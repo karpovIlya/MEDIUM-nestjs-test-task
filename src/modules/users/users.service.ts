@@ -10,6 +10,7 @@ import { SessionRepository } from '../auth/sessions.repository'
 import { TransactionRepository } from '../balance/transaction.repository'
 import { UsersFiltersQueryDto } from './dto/users-filters-query.dto'
 import { CreateUserDto } from './dto/create-user.dto'
+import { GetAllUsersResDto } from './dto/get-all-users-res.dto'
 import { GetUserResDto } from './dto/get-user-res.dto'
 
 import { ERROR_MESSAGES } from 'src/common/consts/error-messages.const'
@@ -28,7 +29,7 @@ export class UsersService {
     limit: number,
     page: number,
     filters: UsersFiltersQueryDto,
-  ) {
+  ): Promise<GetAllUsersResDto> {
     const usersCount = await this.userRepository.getUserCount()
     const usersPagination = new Pagination({
       totalCount: usersCount,
