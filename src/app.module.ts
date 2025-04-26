@@ -6,6 +6,7 @@ import { CacheModule } from '@nestjs/cache-manager'
 import { UsersModule } from './modules/users/users.module'
 import { AuthModule } from './modules/auth/auth.module'
 import { BalanceModule } from './modules/balance/balance.module'
+import { AvatarsModule } from './modules/avatars/avatars.module'
 
 import { createKeyv } from '@keyv/redis'
 import { Keyv } from 'keyv'
@@ -51,6 +52,7 @@ import { CACHE_TTL } from './common/consts/cache-ttl.const'
     UsersModule,
     AuthModule,
     BalanceModule,
+    AvatarsModule,
   ],
 })
 export class AppModule {}

@@ -8,6 +8,7 @@ import {
 } from 'sequelize-typescript'
 import { Session } from '../auth/sessions.model'
 import { Transactions } from '../balance/transactions.model'
+import { Avatar } from '../avatars/avatars.model'
 
 interface IUserCreationAttrs {
   login: string
@@ -83,4 +84,7 @@ export class User extends Model<User, IUserCreationAttrs> {
 
   @HasMany(() => Transactions)
   transactions: Transactions
+
+  @HasMany(() => Avatar)
+  avatars: Avatar[]
 }

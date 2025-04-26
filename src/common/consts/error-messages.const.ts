@@ -10,4 +10,9 @@ export const ERROR_MESSAGES = {
   NOT_ENOUGH_MONEY: 'Not Enough Money',
   SAME_USER_ID: 'You Cannot Transfer Money To Yourself',
   SAME_USER: 'You Cannot Transfer Money To Yourself',
+  SOMETHING_WENT_WRONG: 'Something Went Wrong',
+  ONLY_JPEG_AND_PNG_FILES_ARE_ALLOWED: 'Only JPEG And PNG Files Are Allowed',
+  FILE_SIZE_TOO_LARGE: 'File Size Is Too Large',
+  USER_ALREADY_HAS_AVATAR: 'User Already Has An Avatar',
+  AVATAR_NOT_FOUND: 'Avatar Not Found',
 }
