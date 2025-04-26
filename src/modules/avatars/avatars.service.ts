@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common'
+import { Injectable, Logger, BadRequestException } from '@nestjs/common'
 
 import { IFileService } from 'src/providers/files/files.adapter'
 
@@ -10,7 +10,8 @@ import { UploadFileResultDto } from 'src/providers/files/s3/dto/upload-file-resu
 
 @Injectable()
 export class AvatarsService {
-  private readonly MAX_AVATARS_COUNT = 2
+  private readonly logger = new Logger(AvatarsService.name)
+  private readonly MAX_AVATARS_COUNT = 5
 
   constructor(
     private readonly filesService: IFileService,
@@ -18,7 +19,11 @@ export class AvatarsService {
   ) {}
 
   public async getUserAvatars(userId: number): Promise<GetAvatarsResultDto> {
+    this.logger.log('🔍 Beginning of getting user avatars')
+
     const avatars = await this.avatarsRepository.getUserAvatars(userId)
+
+    this.logger.log('✅ Getting user avatars was successful')
 
     return {
       avatars: avatars.map((avatar) => avatar.toJSON() as unknown as AvatarDto),
@@ -29,10 +34,13 @@ export class AvatarsService {
     userId: number,
     avatarFile: Express.Multer.File,
   ): Promise<UploadFileResultDto> {
+    this.logger.log('🔍 Beginning of creating avatar')
+
     const countUserAvatars =
       await this.avatarsRepository.countUserAvatars(userId)
 
     if (countUserAvatars >= this.MAX_AVATARS_COUNT) {
+      this.logger.error('❌ User already has avatar')
       throw new BadRequestException(ERROR_MESSAGES.USER_ALREADY_HAS_AVATAR)
     }
 
@@ -44,6 +52,8 @@ export class AvatarsService {
 
     await this.avatarsRepository.createAvatar({ userId, path })
 
+    this.logger.log('✅ Creating avatar was successful')
+
     return { path }
   }
 
@@ -51,14 +61,19 @@ export class AvatarsService {
     userId: number,
     avatarId: number,
   ): Promise<AvatarDto> {
+    this.logger.log('🔍 Beginning of deleting avatar')
+
     const avatar = await this.avatarsRepository.getUserAvatar(avatarId)
 
     if (!avatar || avatar.toJSON().userId !== userId) {
+      this.logger.error('❌ Avatar not found')
       throw new BadRequestException(ERROR_MESSAGES.AVATAR_NOT_FOUND)
     }
 
     await this.filesService.removeFile({ path: avatar.toJSON().path })
     await this.avatarsRepository.deleteAvatar(avatarId)
+
+    this.logger.log('✅ Deleting avatar was successful')
 
     return avatar.toJSON() as unknown as AvatarDto
   }

@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common'
@@ -20,6 +21,8 @@ import { ERROR_MESSAGES } from 'src/common/consts/error-messages.const'
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name)
+
   constructor(
     private readonly jwtTokensSevice: JwtTokensSevice,
     private readonly userService: UsersService,
@@ -28,6 +31,8 @@ export class AuthService {
   ) {}
 
   async signUp(userDto: CreateUserDto): Promise<TokensResDto> {
+    this.logger.log('🔍 Beginning of signing up')
+
     const createdUser = await this.userService.createUser(userDto)
     const createdUserJson = createdUser.toJSON()
 
@@ -57,10 +62,14 @@ export class AuthService {
       tokens.refreshToken,
     )
 
+    this.logger.log('✅ Signing up was successful')
+
     return tokens
   }
 
   async signIn(signInDto: SignInDto): Promise<TokensResDto> {
+    this.logger.log('🔍 Beginning of signing in')
+
     const user = await this.userRepository.getUserByEmail(signInDto.email)
     const userJson = user.toJSON()
 
@@ -68,6 +77,7 @@ export class AuthService {
       !user ||
       !(await bcrypt.compare(signInDto.password, user.toJSON().password))
     ) {
+      this.logger.error('❌ Invalid credentials')
       throw new UnauthorizedException(ERROR_MESSAGES.INVALID_CREDITIONALS)
     }
 
@@ -99,15 +109,19 @@ export class AuthService {
       tokens.refreshToken,
     )
 
+    this.logger.log('✅ Signing in was successful')
+
     return tokens
   }
 
   async logout(userJwtPayload: IJwtPayload): Promise<GetUserResDto> {
+    this.logger.log('🔍 Beginning of logging out')
     const currentSession = await this.sessionRepository.getSessionById(
       userJwtPayload.id,
     )
 
     if (!currentSession) {
+      this.logger.error('❌ Invalid token')
       throw new UnauthorizedException(ERROR_MESSAGES.INVALID_TOKEN)
     }
 
@@ -116,15 +130,20 @@ export class AuthService {
     )
 
     if (!user) {
+      this.logger.error('❌ User not found')
       throw new NotFoundException(ERROR_MESSAGES.NO_USER_WITH_THIS_ID)
     }
 
     await this.sessionRepository.destroySession(userJwtPayload.id)
 
+    this.logger.log('✅ Logging out was successful')
+
     return user.toJSON() as GetUserResDto
   }
 
   async updateToken(refreshToken: string) {
+    this.logger.log('🔍 Beginning of updating token')
+
     const refreshTokenPayload = this.jwtTokensSevice.verifyToken(
       refreshToken,
       process.env.JWT_REFRESH_SECRET || '',
@@ -137,6 +156,7 @@ export class AuthService {
       !currentSession ||
       currentSession.toJSON().refreshToken !== refreshToken
     ) {
+      this.logger.error('❌ Invalid token')
       throw new UnauthorizedException(ERROR_MESSAGES.INVALID_TOKEN)
     }
 
@@ -149,6 +169,8 @@ export class AuthService {
       createdAt: refreshTokenPayload.createdAt,
       updatedAt: refreshTokenPayload.updatedAt,
     }
+
+    this.logger.log('✅ Updating token was successful')
 
     return this.jwtTokensSevice.generateToken('access', accessTokenPayload)
   }

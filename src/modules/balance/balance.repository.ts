@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { InjectConnection } from '@nestjs/sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
@@ -8,6 +8,8 @@ import { TTransactionType } from './transactions.model'
 
 @Injectable()
 export class BalanceRepository {
+  private readonly logger = new Logger(BalanceRepository.name)
+
   constructor(
     @InjectConnection() private readonly sequelize: Sequelize,
     private readonly usersRepository: UsersRepository,
@@ -15,6 +17,8 @@ export class BalanceRepository {
   ) {}
 
   public async addTransaction(userId: number, addToBalance: number) {
+    this.logger.log('🔍 Beginning of adding transaction')
+
     const transaction = await this.sequelize.transaction()
 
     try {
@@ -34,15 +38,20 @@ export class BalanceRepository {
           transaction,
         )
 
+      this.logger.log('✅ Adding transaction was successful')
+
       await transaction.commit()
       return createdTransaction
     } catch (error) {
+      this.logger.error('❌ Adding transaction failed')
       await transaction.rollback()
       throw error
     }
   }
 
   public async subtractTransaction(userId: number, subtractToBalance: number) {
+    this.logger.log('🔍 Beginning of subtracting transaction')
+
     const transaction = await this.sequelize.transaction()
 
     try {
@@ -62,9 +71,12 @@ export class BalanceRepository {
           transaction,
         )
 
+      this.logger.log('✅ Subtracting transaction was successful')
+
       await transaction.commit()
       return createdTransaction
     } catch (error) {
+      this.logger.error('❌ Subtracting transaction failed')
       await transaction.rollback()
       throw error
     }
@@ -75,6 +87,8 @@ export class BalanceRepository {
     recipientId: number,
     transferAmount: number,
   ) {
+    this.logger.log('🔍 Beginning of transferring transaction')
+
     const transaction = await this.sequelize.transaction()
 
     try {
@@ -108,6 +122,8 @@ export class BalanceRepository {
           transaction,
         )
 
+      this.logger.log('✅ Transferring transaction was successful')
+
       await transaction.commit()
 
       return {
@@ -115,12 +131,15 @@ export class BalanceRepository {
         recipientTransaction: createdRecipientTransaction,
       }
     } catch (error) {
+      this.logger.error('❌ Transferring transaction failed')
       await transaction.rollback()
       throw error
     }
   }
 
   public async resetAllUsersBalance() {
+    this.logger.log('🔍 Beginning of resetting all users balance')
+
     const transaction = await this.sequelize.transaction()
 
     try {
@@ -137,8 +156,11 @@ export class BalanceRepository {
         transaction,
       )
 
+      this.logger.log('✅ Resetting all users balance was successful')
+
       await transaction.commit()
     } catch (error) {
+      this.logger.error('❌ Resetting all users balance failed')
       await transaction.rollback()
       throw error
     }

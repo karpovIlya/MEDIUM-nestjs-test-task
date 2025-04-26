@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ConflictException,
 } from '@nestjs/common'
@@ -19,6 +20,8 @@ import { IJwtPayload } from '../auth/jwt-tokens.service'
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name)
+
   constructor(
     private readonly userRepository: UsersRepository,
     private readonly sessionRepository: SessionRepository,
@@ -37,11 +40,15 @@ export class UsersService {
       page,
     })
 
+    this.logger.log('🔍 Beginning of getting all users')
+
     const paginatedUsers = await this.userRepository.getPaginatedUsers(
       usersPagination.limit,
       usersPagination.offset,
       filters,
     )
+
+    this.logger.log('✅ Getting all users was successful')
 
     return {
       users: paginatedUsers.rows,
@@ -54,9 +61,14 @@ export class UsersService {
       userJwtPayload.id,
     )
 
+    this.logger.log('🔍 Beginning of getting user')
+
     if (!user) {
+      this.logger.error('❌ User not found')
       throw new NotFoundException(ERROR_MESSAGES.NO_USER_WITH_THIS_ID)
     }
+
+    this.logger.log('✅ Getting user was successful')
 
     return user.toJSON() as GetUserResDto
   }
@@ -66,7 +78,10 @@ export class UsersService {
       userJwtPayload.id,
     )
 
+    this.logger.log('🔍 Beginning of deleting user')
+
     if (!user) {
+      this.logger.error('❌ User not found')
       throw new NotFoundException(ERROR_MESSAGES.NO_USER_WITH_THIS_ID)
     }
 
@@ -76,6 +91,8 @@ export class UsersService {
       userJwtPayload.id,
     )
 
+    this.logger.log('✅ Deleting user was successful')
+
     return user.toJSON() as GetUserResDto
   }
 
@@ -84,7 +101,10 @@ export class UsersService {
       userDto.email,
     )
 
+    this.logger.log('🔍 Beginning of creating user')
+
     if (isUserAlreadyExist) {
+      this.logger.error('❌ User already exists')
       throw new ConflictException(ERROR_MESSAGES.USER_ALREADY_EXIST)
     }
 
@@ -93,6 +113,8 @@ export class UsersService {
       ...userDto,
       password: hashedPassword,
     }
+
+    this.logger.log('✅ Creating user was successful')
 
     return await this.userRepository.addUser(userDtoWithHashPassword)
   }
