@@ -1,5 +1,14 @@
-import { Table, Model, Column, DataType, HasOne } from 'sequelize-typescript'
+import {
+  Table,
+  Model,
+  Column,
+  DataType,
+  HasOne,
+  HasMany,
+} from 'sequelize-typescript'
 import { Session } from '../auth/sessions.model'
+import { Transactions } from '../balance/transactions.model'
+import { Avatar } from '../avatars/avatars.model'
 
 interface IUserCreationAttrs {
   login: string
@@ -60,6 +69,22 @@ export class User extends Model<User, IUserCreationAttrs> {
   })
   declare deletedAt: Date | null
 
+  @Column({
+    type: DataType.DECIMAL(9, 2),
+    allowNull: false,
+    defaultValue: 0,
+    validate: {
+      min: 0,
+    },
+  })
+  balance: number
+
   @HasOne(() => Session)
   session: Session
+
+  @HasMany(() => Transactions)
+  transactions: Transactions
+
+  @HasMany(() => Avatar)
+  avatars: Avatar[]
 }

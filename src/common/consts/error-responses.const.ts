@@ -16,4 +16,14 @@ export const ERROR_RESPONSES = {
     description: 'ERROR: Internal Server Error Exception',
     type: BaseExceptionDto,
   },
+  NOT_FOUND_EXCEPTION: {
+    status: 404,
+    description: 'ERROR: Not Found Exception',
+    type: BaseExceptionDto,
+  },
+  SAME_USER_EXCEPTION: {
+    status: 400,
+    description: 'ERROR: Same User Exception',
+    type: BaseExceptionDto,
+  },
 }
