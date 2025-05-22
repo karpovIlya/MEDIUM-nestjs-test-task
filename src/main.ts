@@ -7,7 +7,9 @@ import { ValidationPipe } from '@nestjs/common'
 
 async function startServer() {
   const app = await NestFactory.create(AppModule)
+  const globalPrefix = 'api'
 
+  app.setGlobalPrefix(globalPrefix)
   app.use(cookieParser())
   app.useGlobalFilters(new AppExceptionFilter())
   app.useGlobalPipes(

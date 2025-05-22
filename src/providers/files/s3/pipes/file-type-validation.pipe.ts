@@ -5,7 +5,6 @@ import { ERROR_MESSAGES } from 'src/common/consts/error-messages.const'
 export class FileTypeValidationPipe implements PipeTransform {
   transform(value: any) {
     const { mimetype } = value
-    console.log('File mimetype:', mimetype)
 
     if (
       !mimetype ||

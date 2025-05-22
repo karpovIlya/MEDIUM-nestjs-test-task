@@ -4,6 +4,8 @@ export const ERROR_MESSAGES = {
   USER_ALREADY_EXIST: 'This User Already Exists',
   NO_USER_WITH_THIS_EMAIL: 'There Is No User With This Email',
   NO_USER_WITH_THIS_ID: 'There Is No User With This ID',
+  NO_SESSION_WITH_THIS_ID: 'There Is No Session With This ID',
+  NO_AVATAR_WITH_THIS_ID: 'There Is No Avatar With This ID',
   INVALID_TOKEN: 'Invalid Or Expired Token',
   INVALID_CREDITIONALS: 'Invalid Credentials',
   NEGATIVE_BALANCE: 'Balance Cannot Be Negative',

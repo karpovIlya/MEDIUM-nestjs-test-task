@@ -1,5 +1,0 @@
-export const CACHE_TTL = {
-  SMALL_TTL: 30 * 1000,
-  MEDIUM_TTL: 60 * 1000,
-  LARGE_TTL: 120 * 1000,
-}
