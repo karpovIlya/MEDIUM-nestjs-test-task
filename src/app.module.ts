@@ -3,56 +3,25 @@ import { ConfigModule } from '@nestjs/config'
 import { SequelizeModule } from '@nestjs/sequelize'
 import { BullModule } from '@nestjs/bullmq'
 import { CacheModule } from '@nestjs/cache-manager'
-import { UsersModule } from './modules/users/users.module'
-import { AuthModule } from './modules/auth/auth.module'
-import { BalanceModule } from './modules/balance/balance.module'
-import { AvatarsModule } from './modules/avatars/avatars.module'
+import { FeaturesModule } from './features/features.module'
 
-import { createKeyv } from '@keyv/redis'
-import { Keyv } from 'keyv'
-import { CacheableMemory } from 'cacheable'
-import { CACHE_TTL } from './common/consts/cache-ttl.const'
+import { getSequelizeConfig } from './common/configs/sequelize.config'
+import { getBullConfig } from './common/configs/bull.config'
+import { getCacheConfig } from './common/configs/cache.config'
 
 @Module({
   imports: [
     ConfigModule.forRoot({
+      isGlobal: true,
       envFilePath: '.env',
     }),
-    SequelizeModule.forRoot({
-      dialect: 'postgres',
-      host: process.env.POSTGRES_HOST,
-      port: Number(process.env.POSTGRES_PORT),
-      username: process.env.POSTGRES_USER,
-      password: process.env.POSTGRES_PASSWORD,
-      database: process.env.POSTGRES_DB,
-      autoLoadModels: true,
-      models: [],
-    }),
-    BullModule.forRoot({
-      connection: {
-        host: process.env.REDIS_HOST,
-        port: Number(process.env.REDIS_PORT),
-      },
-      prefix: 'queue',
-    }),
+    SequelizeModule.forRootAsync(getSequelizeConfig()),
+    BullModule.forRootAsync(getBullConfig()),
     CacheModule.registerAsync({
       isGlobal: true,
-      useFactory: () => ({
-        ttl: CACHE_TTL.SMALL_TTL,
-        stores: [
-          new Keyv({
-            store: new CacheableMemory(),
-          }),
-          createKeyv(
-            `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
-          ),
-        ],
-      }),
+      ...getCacheConfig(),
     }),
-    UsersModule,
-    AuthModule,
-    BalanceModule,
-    AvatarsModule,
+    FeaturesModule,
   ],
 })
 export class AppModule {}

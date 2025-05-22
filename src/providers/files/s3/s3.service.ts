@@ -40,7 +40,6 @@ export class S3Service extends IFileService {
               path,
             })
           } else {
-            console.log(error)
             this.logger.error(`❌ File upload error with path: ${path}`)
             reject(new BadRequestException(ERROR_MESSAGES.SOMETHING_WENT_WRONG))
           }
